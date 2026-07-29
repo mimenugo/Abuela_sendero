@@ -268,7 +268,6 @@ footer { padding: 45px 0 110px; color: var(--brown); background: var(--cream); }
 .footer-grid strong { font-family: "Fraunces", serif; font-size: 1.4rem; }
 .footer-grid p { color: var(--muted); }
 .footer-grid a { color: var(--pink); font-weight: 800; }
-.footer-grid .admin-link { color: var(--muted); font-size: .78rem; font-weight: 600; text-decoration: underline; }
 
 .floating-cart {
   position: fixed;
