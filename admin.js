@@ -1,9 +1,11 @@
 let catalog = [];
 let search = "";
+let selectedCategory = "Todos";
 
 const catalogList = document.querySelector("#catalog-list");
 const form = document.querySelector("#product-form");
 const fileInput = document.querySelector("#import-file");
+const imageFileInput = document.querySelector("#product-image-file");
 
 function escapeHtml(value) {
   return String(value)
@@ -49,14 +51,24 @@ function saveDraft() {
 
 function renderCatalog() {
   const term = search.toLocaleLowerCase("es");
+  const categories = [...new Set(catalog.map(product => product.category))].sort();
+  if (selectedCategory !== "Todos" && !categories.includes(selectedCategory)) {
+    selectedCategory = "Todos";
+  }
   const filtered = [...catalog]
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999))
+    .filter(product => selectedCategory === "Todos" || product.category === selectedCategory)
     .filter(product => `${product.name} ${product.category}`.toLocaleLowerCase("es").includes(term));
 
   document.querySelector("#product-count").textContent = catalog.length;
   document.querySelector("#category-options").innerHTML =
-    [...new Set(catalog.map(product => product.category))].sort()
+    categories
       .map(category => `<option value="${escapeHtml(category)}"></option>`).join("");
+  document.querySelector("#catalog-category-filter").innerHTML = [
+    '<option value="Todos">Todas las categorías</option>',
+    ...categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
+  ].join("");
+  document.querySelector("#catalog-category-filter").value = selectedCategory;
 
   if (!filtered.length) {
     catalogList.innerHTML = '<p class="catalog-empty">No hay productos que coincidan con la búsqueda.</p>';
@@ -89,6 +101,8 @@ function resetForm() {
   document.querySelector("#product-active").checked = true;
   document.querySelector("#product-order").value = catalog.length + 1;
   document.querySelector("#editor-title").textContent = "Agregar platillo";
+  imageFileInput.value = "";
+  updateImagePreview("");
   document.querySelector("#product-name").focus();
 }
 
@@ -102,10 +116,63 @@ function editProduct(id) {
   document.querySelector("#product-emoji").value = product.emoji || "";
   document.querySelector("#product-order").value = product.order ?? "";
   document.querySelector("#product-image").value = product.image || "";
+  updateImagePreview(product.image || "");
   document.querySelector("#product-description").value = product.description;
   document.querySelector("#product-active").checked = product.active !== false;
   document.querySelector("#editor-title").textContent = "Editar platillo";
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function updateImagePreview(source) {
+  const preview = document.querySelector("#image-preview");
+  const previewImage = document.querySelector("#image-preview-img");
+  preview.hidden = !source;
+  if (source) previewImage.src = source;
+  else previewImage.removeAttribute("src");
+}
+
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = () => reject(new Error("El archivo no es una imagen válida"));
+      image.onload = () => {
+        const maxWidth = 900;
+        const maxHeight = 700;
+        const scale = Math.min(1, maxWidth / image.width, maxHeight / image.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.width * scale));
+        canvas.height = Math.max(1, Math.round(image.height * scale));
+        canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/webp", 0.78));
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function selectProductImage(file) {
+  if (!file || !file.type.startsWith("image/")) {
+    showToast("Selecciona una imagen válida");
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    showToast("La imagen no debe superar 10 MB");
+    return;
+  }
+  try {
+    showToast("Preparando imagen...");
+    const dataUrl = await compressImage(file);
+    document.querySelector("#product-image").value = dataUrl;
+    updateImagePreview(dataUrl);
+    showToast("Imagen agregada al producto");
+  } catch (error) {
+    showToast("No fue posible procesar la imagen");
+    console.error(error);
+  }
 }
 
 function submitProduct(event) {
@@ -210,12 +277,28 @@ document.querySelector("#reset-form").addEventListener("click", resetForm);
 document.querySelector("#download-button").addEventListener("click", downloadCatalog);
 document.querySelector("#restore-button").addEventListener("click", restoreCatalog);
 document.querySelector("#import-button").addEventListener("click", () => fileInput.click());
+document.querySelector("#browse-image").addEventListener("click", () => imageFileInput.click());
+imageFileInput.addEventListener("change", event => {
+  if (event.target.files[0]) selectProductImage(event.target.files[0]);
+});
+document.querySelector("#remove-image").addEventListener("click", () => {
+  document.querySelector("#product-image").value = "";
+  imageFileInput.value = "";
+  updateImagePreview("");
+});
+document.querySelector("#product-image").addEventListener("input", event => {
+  updateImagePreview(event.target.value.trim());
+});
 fileInput.addEventListener("change", event => {
   if (event.target.files[0]) importCatalog(event.target.files[0]);
   event.target.value = "";
 });
 document.querySelector("#admin-search").addEventListener("input", event => {
   search = event.target.value.trim();
+  renderCatalog();
+});
+document.querySelector("#catalog-category-filter").addEventListener("change", event => {
+  selectedCategory = event.target.value;
   renderCatalog();
 });
 catalogList.addEventListener("click", event => {
