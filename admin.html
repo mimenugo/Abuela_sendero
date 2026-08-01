@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#c71959" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Administrar menú | Abuela Chana</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+  <body>
+    <header class="admin-header">
+      <a href="./index.html" class="admin-brand">
+        <img src="./assets/logo-chana.png" alt="Cocina de la Abuela Chana" />
+        <span><b>Administrador</b><small>Catálogo del menú</small></span>
+      </a>
+      <a class="view-menu" href="./index.html">Ver menú público</a>
+    </header>
+
+    <main class="admin-shell">
+      <section class="intro">
+        <div>
+          <p class="eyebrow">Editor sin servidor</p>
+          <h1>Administra tus platillos</h1>
+          <p>
+            Los cambios se guardan temporalmente en este navegador. Al terminar,
+            descarga el catálogo y reemplaza <code>products.json</code> en GitHub.
+          </p>
+        </div>
+        <div class="intro-actions">
+          <button class="button secondary" id="restore-button" type="button">Restaurar catálogo</button>
+          <button class="button secondary" id="import-button" type="button">Importar JSON</button>
+          <button class="button primary" id="download-button" type="button">Descargar products.json</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden />
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="editor-panel">
+          <div class="panel-title">
+            <div>
+              <p class="eyebrow">Producto</p>
+              <h2 id="editor-title">Agregar platillo</h2>
+            </div>
+            <button id="reset-form" class="text-button" type="button">Limpiar</button>
+          </div>
+
+          <form id="product-form">
+            <input id="product-id" type="hidden" />
+            <label>
+              Nombre del platillo *
+              <input id="product-name" required maxlength="80" placeholder="Ej. Enchiladas de la casa" />
+            </label>
+            <div class="field-row">
+              <label>
+                Categoría *
+                <input id="product-category" required list="category-options" placeholder="Ej. Comidas" />
+                <datalist id="category-options"></datalist>
+              </label>
+              <label>
+                Precio *
+                <input id="product-price" required type="number" min="0" step="0.01" placeholder="0.00" />
+              </label>
+            </div>
+            <div class="field-row">
+              <label>
+                Emoji
+                <input id="product-emoji" maxlength="8" placeholder="🍽️" />
+              </label>
+              <label>
+                Orden
+                <input id="product-order" type="number" min="1" step="1" />
+              </label>
+            </div>
+            <label>
+              Ruta de fotografía
+              <input id="product-image" placeholder="./assets/productos/enchiladas.jpg" />
+              <small>Primero agrega la imagen a la carpeta del proyecto y escribe aquí su ruta.</small>
+            </label>
+            <label>
+              Descripción *
+              <textarea id="product-description" required rows="4" maxlength="220" placeholder="Ingredientes y presentación del platillo"></textarea>
+            </label>
+            <label class="availability">
+              <input id="product-active" type="checkbox" checked />
+              Mostrar producto en el menú
+            </label>
+            <button class="button primary full" type="submit">Guardar producto</button>
+          </form>
+        </aside>
+
+        <section class="catalog-panel">
+          <div class="catalog-toolbar">
+            <div>
+              <p class="eyebrow">Catálogo actual</p>
+              <h2><span id="product-count">0</span> productos</h2>
+            </div>
+            <input id="admin-search" type="search" placeholder="Buscar producto…" />
+          </div>
+          <div class="catalog-list" id="catalog-list"></div>
+        </section>
+      </section>
+
+      <section class="publish-guide">
+        <p class="eyebrow">Cómo publicar los cambios</p>
+        <h2>Tres pasos sencillos</h2>
+        <ol>
+          <li><b>Descarga</b><span>Usa el botón “Descargar products.json”.</span></li>
+          <li><b>Reemplaza</b><span>Sube el archivo al repositorio y reemplaza el anterior.</span></li>
+          <li><b>Publica</b><span>GitHub Pages actualizará el menú automáticamente.</span></li>
+        </ol>
+        <p class="security-note">
+          Este editor no contiene contraseñas ni acceso directo a GitHub. Por seguridad,
+          solamente prepara el archivo que tú decides publicar.
+        </p>
+      </section>
+    </main>
+
+    <div class="admin-toast" id="admin-toast" role="status" aria-live="polite"></div>
+    <script src="./catalog-backup.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>
